@@ -1,3 +1,3 @@
-from .translate import GermanToEnglishTranslator
+from .translate import EnglishToGermanTranslator
 
-__all__ = ["GermanToEnglishTranslator"]
+__all__ = ["EnglishToGermanTranslator"]
