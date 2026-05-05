@@ -161,7 +161,16 @@ class EnglishToGermanTranslator:
             return df_out
 
         self._load_cache()
-        self._load_model()
+
+        hashes = [_md5(text) for text in cleaned_texts]
+
+        miss_positions = [
+            pos for pos in non_empty_positions
+            if hashes[pos] not in self._cache
+        ]
+
+        if miss_positions:
+            self._load_model()
 
         # Hash the cleaned text — consistent across runs as long as cleaning is deterministic
         hashes = [_md5(text) for text in cleaned_texts]
