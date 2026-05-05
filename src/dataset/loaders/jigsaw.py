@@ -28,7 +28,12 @@ Merge rules applied:
         Profanity is not reliably harmful and was annotated as a distinct
         category from toxicity. Dropped from the training schema.
 
-Language: multilingual (treated as-is; corpus is mostly English)
+Language: en
+    Despite the dataset name "Jigsaw Multilingual", the files loaded here
+    (train.csv, test.csv, test_labels.csv) contain English text only.
+    Setting language="en" ensures the translation stage picks up these rows
+    and produces silver German data, consistent with other English sources.
+
 Test rows with label == -1 (unscored) are dropped.
 """
 from pathlib import Path
@@ -45,7 +50,7 @@ _RAW_LABEL_COLS = ["toxic", "severe_toxic", "obscene", "threat", "insult", "iden
 
 class JigsawLoader(BaseCorpusLoader):
     SOURCE = "jigsaw"
-    LANGUAGE = "multilingual"
+    LANGUAGE = "en"
 
     def load(self, data_dir: Union[str, Path]) -> pd.DataFrame:
         jigsaw_dir = Path(data_dir) / "jigsaw"

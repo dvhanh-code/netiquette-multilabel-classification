@@ -34,6 +34,7 @@ from tqdm import tqdm
 
 logger = logging.getLogger(__name__)
 
+
 MODEL_NAME = "Helsinki-NLP/opus-mt-en-de"
 
 _REQUIRED_COLUMNS = {"text", "language"}
@@ -79,7 +80,7 @@ class EnglishToGermanTranslator:
         cache_path: Optional[Union[str, Path]] = None,
         batch_size: int = 32,
         max_length: int = 512,
-        generation_max_new_tokens: int = 128,
+        generation_max_new_tokens: int = 512,
         device: Optional[str] = None,
     ) -> None:
         self.batch_size = batch_size
@@ -186,13 +187,10 @@ class EnglishToGermanTranslator:
 
         if miss_positions:
             texts_to_translate = [cleaned_texts[pos] for pos in miss_positions]
-            translations = self._translate_in_batches(texts_to_translate)
+            hashes_to_translate = [hashes[pos] for pos in miss_positions]
 
-            for pos, translation in zip(miss_positions, translations):
-                if translation is not None:
-                    self._cache[hashes[pos]] = translation
-
-            self._save_cache()
+            # Translations are now persisted incrementally after each batch.
+            self._translate_in_batches(texts_to_translate, hashes_to_translate)
 
         n_success = 0
         n_failed = 0
@@ -235,25 +233,66 @@ class EnglishToGermanTranslator:
                 f"Found: {list(df.columns)}"
             )
 
-    def _translate_in_batches(self, texts: List[str]) -> List[Optional[str]]:
+    def _translate_in_batches(
+        self,
+        texts: List[str],
+        text_hashes: List[str],
+    ) -> List[Optional[str]]:
         """
-        Translate texts in batches.
+        Translate texts in batches and persist successful translations incrementally.
+
+        Args:
+            texts:
+                Cleaned input texts aligned with text_hashes.
+            text_hashes:
+                MD5 hashes aligned with texts. Used as persistent cache keys.
 
         Returns:
             A list aligned with the input order.
             Failed items are returned as None.
+
+        Behavior:
+            - After each successful batch, translations are written immediately
+              to self._cache and persisted via _save_cache().
+            - If a batch fails, the method falls back to item-by-item translation.
+              Each successful item is cached and persisted immediately.
         """
         if not texts:
             return []
+
+        if len(texts) != len(text_hashes):
+            raise ValueError(
+                f"texts and text_hashes must have the same length, got "
+                f"{len(texts)} and {len(text_hashes)}"
+            )
 
         results: List[Optional[str]] = []
         starts = range(0, len(texts), self.batch_size)
 
         for start in tqdm(starts, desc="Translating batches"):
             batch = texts[start : start + self.batch_size]
+            batch_hashes = text_hashes[start : start + self.batch_size]
 
             try:
-                results.extend(self._translate_batch(batch))
+                batch_results = self._translate_batch(batch)
+                results.extend(batch_results)
+
+                added = 0
+                for h, translated in zip(batch_hashes, batch_results):
+                    if translated is not None:
+                        self._cache[h] = translated
+                        added += 1
+
+                if added > 0:
+                    self._save_cache()
+                    logger.info(
+                        "Persisted batch %d-%d (%d new translations, cache size: %d).",
+                        start,
+                        start + len(batch) - 1,
+                        added,
+                        len(self._cache),
+                    )
+
             except Exception as exc:  # noqa: BLE001
                 logger.error(
                     "Batch %d-%d failed (%s). Retrying item by item.",
@@ -262,10 +301,19 @@ class EnglishToGermanTranslator:
                     exc,
                 )
 
-                for text in batch:
+                for text, h in zip(batch, batch_hashes):
                     try:
-                        translated = self._translate_batch([text])
-                        results.append(translated[0])
+                        translated = self._translate_batch([text])[0]
+                        results.append(translated)
+
+                        if translated is not None:
+                            self._cache[h] = translated
+                            self._save_cache()
+                            logger.info(
+                                "Persisted single-item fallback translation (cache size: %d).",
+                                len(self._cache),
+                            )
+
                     except Exception as item_exc:  # noqa: BLE001
                         logger.error(
                             "Single-item translation failed (%s). Keeping original text.",

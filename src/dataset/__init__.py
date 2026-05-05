@@ -6,7 +6,6 @@ from .loaders import (
     DetoxLoader,
     JigsawLoader,
     WikipediaAttacksLoader,
-    WikipediaPolitenessLoader,
     GutefragLoader,
     ALL_LOADERS,
 )
@@ -21,7 +20,6 @@ __all__ = [
     "DetoxLoader",
     "JigsawLoader",
     "WikipediaAttacksLoader",
-    "WikipediaPolitenessLoader",
     "GutefragLoader",
     "ALL_LOADERS",
 ]

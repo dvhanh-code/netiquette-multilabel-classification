@@ -1,5 +1,5 @@
 """
-UnifiedCorpusDataset — combines all six corpora into a single DataFrame
+UnifiedCorpusDataset — combines all seven corpora into a single DataFrame
 with a consistent label schema.
 
 Usage
@@ -38,13 +38,17 @@ class UnifiedCorpusDataset:
 
         Args:
             corpora: list of corpus names to load, e.g. ["gmhp7k", "jigsaw"].
-                     Loads all six corpora when None.
+                     Loads all seven corpora when None.
 
         Returns:
             Unified DataFrame with columns:
                 text, source, language, split,
-                hate_speech, misogyny, toxic, severe_toxic, obscene,
-                threat, insult, identity_hate, attack, impolite
+                hate_speech, toxic, threat, insult
+
+            Label columns follow SCHEMA_COLUMNS from schema.py.
+            Labels not annotated by a corpus are NaN (not 0).
+            Total: 8 columns (SCHEMA_COLUMNS).
+            After quality metadata stage: 10 columns (OUTPUT_COLUMNS).
         """
         if corpora is None:
             loaders = ALL_LOADERS

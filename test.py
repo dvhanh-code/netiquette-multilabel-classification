@@ -3,7 +3,7 @@ Run all tests:
     python -m pytest test.py -v
 
 Run a specific test:
-    python -m pytest test.py::TestGermanToEnglishTranslator -v
+    python -m pytest test.py::TestEnglishToGermanTranslator -v
 
 Run without downloading the translation model (fast, offline):
     python -m pytest test.py -v -m "not slow"
@@ -18,7 +18,9 @@ from src.dataset.loaders.gmhp7k import GMHP7kLoader
 from src.dataset.loaders.jigsaw import JigsawLoader
 from src.dataset.loaders.wikipedia_attacks import WikipediaAttacksLoader
 from src.dataset.loaders.gutefrage import GutefragLoader
-from src.preprocessing.translate import GermanToEnglishTranslator, _md5
+from src.dataset.loaders.detox import DetoxLoader
+from src.dataset.loaders.hocon34k import HOCON34kLoader
+from src.preprocessing.translate import EnglishToGermanTranslator, _md5
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -33,10 +35,7 @@ def _make_df(rows: list[dict]) -> pd.DataFrame:
 
 
 def _german_df() -> pd.DataFrame:
-    """Minimal multilingual DataFrame for translator tests.
-
-    Uses only labels that exist in the current 5-label schema.
-    """
+    """Minimal multilingual DataFrame for translator tests."""
     return _make_df([
         {"text": "Das ist eine normale Aussage.", "language": "de", "source": "gmhp7k",  "hate_speech": 0.0},
         {"text": "Frauen gehören in die Küche.",  "language": "de", "source": "gmhp7k",  "hate_speech": 1.0},
@@ -94,15 +93,15 @@ class TestSchema:
         assert len(ALL_LABELS) > 0
 
     def test_reduced_label_count(self):
-        """Schema reduction: exactly 5 training labels."""
-        assert len(ALL_LABELS) == 5
+        """4-label schema: hate_speech, toxic, threat, insult."""
+        assert len(ALL_LABELS) == 4
 
     def test_expected_labels_present(self):
-        assert set(ALL_LABELS) == {"hate_speech", "toxic", "threat", "insult", "impolite"}
+        assert set(ALL_LABELS) == {"hate_speech", "toxic", "threat", "insult"}
 
     def test_removed_labels_absent(self):
-        """Labels removed in the schema reduction must not reappear."""
-        removed = {"misogyny", "severe_toxic", "obscene", "identity_hate", "attack"}
+        """Labels removed from the schema must not reappear."""
+        removed = {"misogyny", "severe_toxic", "obscene", "identity_hate", "attack", "impolite"}
         present = removed & set(ALL_LABELS)
         assert present == set(), f"Removed labels still in schema: {present}"
 
@@ -118,7 +117,7 @@ class TestSchema:
     def test_all_corpora_present(self):
         expected = {
             "gmhp7k", "hocon34k", "detox", "jigsaw",
-            "wikipedia_attacks", "wikipedia_politeness", "gutefrage",
+            "wikipedia_attacks", "gutefrage",
         }
         assert expected == set(CORPUS_LABELS.keys())
 
@@ -270,89 +269,99 @@ class TestMergeRules:
 # Translator — unit tests (no model download)
 # ─────────────────────────────────────────────────────────────────────────────
 
-class TestGermanToEnglishTranslator:
+class TestEnglishToGermanTranslator:
 
-    def test_no_german_rows_returns_copy(self):
+    def test_no_english_rows_returns_unchanged(self):
+        # No English rows — translator has nothing to do.
         df = _make_df([
-            {"text": "Hello world", "language": "en"},
-            {"text": "Bonjour",     "language": "fr"},
+            {"text": "Hallo Welt", "language": "de"},
+            {"text": "Bonjour",    "language": "fr"},
         ])
-        t = GermanToEnglishTranslator(cache_path=None)
+        t = EnglishToGermanTranslator(cache_path=None)
         out = t.translate(df)
-        pd.testing.assert_frame_equal(df, out)
         assert out is not df  # must be a copy
+        pd.testing.assert_series_equal(df["text"],     out["text"])
+        pd.testing.assert_series_equal(df["language"], out["language"])
 
-    def test_output_preserves_schema_columns(self):
+    def test_schema_columns_preserved_in_output(self):
+        # All SCHEMA_COLUMNS must be present; translator may add extra metadata cols.
         df = _german_df()
-        t = GermanToEnglishTranslator(cache_path=None)
-        for text in df.loc[df["language"] == "de", "text"]:
-            t._cache[_md5(text)] = f"[TRANSLATED] {text}"
+        t = EnglishToGermanTranslator(cache_path=None)
+        english_text = df.loc[df["language"] == "en", "text"].iloc[0]
+        t._cache[_md5(english_text)] = "Deutsche Übersetzung"
         out = t.translate(df)
-        assert list(out.columns) == SCHEMA_COLUMNS
+        for col in SCHEMA_COLUMNS:
+            assert col in out.columns
 
-    def test_german_rows_language_updated_to_en(self):
+    def test_english_rows_language_updated_to_de(self):
+        # After successful translation all rows must be "de"
+        # (German rows stay "de"; English rows become "de").
         df = _german_df()
-        t = GermanToEnglishTranslator(cache_path=None)
-        for text in df.loc[df["language"] == "de", "text"]:
-            t._cache[_md5(text)] = f"translated: {text}"
+        t = EnglishToGermanTranslator(cache_path=None)
+        for text in df.loc[df["language"] == "en", "text"]:
+            t._cache[_md5(text)] = f"übersetzt: {text}"
         out = t.translate(df)
-        assert (out["language"] == "de").sum() == 0
-        assert (out["language"] == "en").sum() == len(out)
+        assert (out["language"] == "en").sum() == 0
+        assert (out["language"] == "de").sum() == len(out)
 
-    def test_non_german_text_unchanged(self):
+    def test_non_english_text_unchanged(self):
+        # German rows must not be touched by the en→de translator.
         df = _german_df()
-        t = GermanToEnglishTranslator(cache_path=None)
-        for text in df.loc[df["language"] == "de", "text"]:
+        t = EnglishToGermanTranslator(cache_path=None)
+        for text in df.loc[df["language"] == "en", "text"]:
             t._cache[_md5(text)] = "some translation"
         out = t.translate(df)
-        english_orig = df.loc[df["language"] == "en", "text"].iloc[0]
-        english_out  = out.loc[out["source"] == "jigsaw", "text"].iloc[0]
-        assert english_orig == english_out
+        german_orig = df.loc[df["language"] == "de", "text"].iloc[0]
+        german_out  = out.loc[out["source"] == "gmhp7k", "text"].iloc[0]
+        assert german_orig == german_out
 
     def test_labels_preserved_after_translation(self):
         df = _german_df()
-        t = GermanToEnglishTranslator(cache_path=None)
-        for text in df.loc[df["language"] == "de", "text"]:
-            t._cache[_md5(text)] = "translated"
+        t = EnglishToGermanTranslator(cache_path=None)
+        for text in df.loc[df["language"] == "en", "text"]:
+            t._cache[_md5(text)] = "übersetzt"
         out = t.translate(df)
         pd.testing.assert_series_equal(df["hate_speech"], out["hate_speech"])
 
     def test_row_count_unchanged(self):
         df = _german_df()
-        t = GermanToEnglishTranslator(cache_path=None)
-        for text in df.loc[df["language"] == "de", "text"]:
-            t._cache[_md5(text)] = "translated"
+        t = EnglishToGermanTranslator(cache_path=None)
+        for text in df.loc[df["language"] == "en", "text"]:
+            t._cache[_md5(text)] = "übersetzt"
         out = t.translate(df)
         assert len(out) == len(df)
 
-    def test_cache_hit_skips_model_call(self, tmp_path):
+    def test_cache_hit_skips_model_call(self):
+        # With every English row already in the cache, model is never loaded.
         df = _german_df()
-        t = GermanToEnglishTranslator(cache_path=None)
-        for text in df.loc[df["language"] == "de", "text"]:
-            t._cache[_md5(text)] = "cached translation"
+        t = EnglishToGermanTranslator(cache_path=None)
+        for text in df.loc[df["language"] == "en", "text"]:
+            t._cache[_md5(text)] = "gecachte Übersetzung"
         out = t.translate(df)
-        assert (out["language"] == "en").all()
+        # The Jigsaw row (language="en") must now be "de"
+        assert (out.loc[out["source"] == "jigsaw", "language"] == "de").all()
+        assert t._model is None  # model was never loaded
 
     def test_cache_persisted_and_reloaded(self, tmp_path):
         cache_file = tmp_path / "trans.parquet"
-        df = _make_df([{"text": "Hallo Welt", "language": "de"}])
+        df = _make_df([{"text": "Hello World", "language": "en"}])
 
-        t1 = GermanToEnglishTranslator(cache_path=cache_file)
-        t1._cache[_md5("Hallo Welt")] = "Hello World"
+        t1 = EnglishToGermanTranslator(cache_path=cache_file)
+        t1._cache[_md5("Hello World")] = "Hallo Welt"
         t1._save_cache()
         assert cache_file.exists()
 
-        t2 = GermanToEnglishTranslator(cache_path=cache_file)
+        t2 = EnglishToGermanTranslator(cache_path=cache_file)
         t2._load_cache()
-        assert _md5("Hallo Welt") in t2._cache
-        assert t2._cache[_md5("Hallo Welt")] == "Hello World"
+        assert _md5("Hello World") in t2._cache
+        assert t2._cache[_md5("Hello World")] == "Hallo Welt"
 
     def test_md5_deterministic(self):
         assert _md5("test") == _md5("test")
         assert _md5("a") != _md5("b")
 
     def test_default_device_returns_string(self):
-        device = GermanToEnglishTranslator._default_device()
+        device = EnglishToGermanTranslator._default_device()
         assert device in ("cpu", "cuda", "mps")
 
 
@@ -364,33 +373,33 @@ class TestGermanToEnglishTranslator:
 class TestTranslatorIntegration:
 
     def test_real_translation_quality(self, tmp_path):
-        samples = {
-            "Das ist ein Test.":               "test",
-            "Ich hasse dich.":                 "hate",
-            "Das Wetter ist heute sehr schön.": "weather",
-            "Frauen gehören in die Küche.":    "kitchen",
-        }
-        df = _make_df([{"text": t, "language": "de"} for t in samples])
-        t = GermanToEnglishTranslator(cache_path=tmp_path / "cache.parquet", batch_size=4)
+        samples = [
+            "This is a test.",
+            "I hate you.",
+            "The weather is beautiful today.",
+            "Women belong in the kitchen.",
+        ]
+        df = _make_df([{"text": t, "language": "en"} for t in samples])
+        t = EnglishToGermanTranslator(cache_path=tmp_path / "cache.parquet", batch_size=4)
         out = t.translate(df)
 
-        assert (out["language"] == "en").all()
+        assert (out["language"] == "de").all()
         assert out["text"].str.len().min() > 0
 
-        kitchen_row = out[df["text"] == "Frauen gehören in die Küche."]
-        assert "kitchen" in kitchen_row["text"].iloc[0].lower()
+        kitchen_row = out[df["text"] == "Women belong in the kitchen."]
+        assert "küche" in kitchen_row["text"].iloc[0].lower()
 
     def test_cache_used_on_second_run(self, tmp_path):
-        df = _make_df([{"text": "Guten Morgen.", "language": "de"}])
+        df = _make_df([{"text": "Good morning.", "language": "en"}])
         cache = tmp_path / "cache.parquet"
 
-        t1 = GermanToEnglishTranslator(cache_path=cache, batch_size=1)
+        t1 = EnglishToGermanTranslator(cache_path=cache, batch_size=1)
         out1 = t1.translate(df)
         assert cache.exists()
 
-        t2 = GermanToEnglishTranslator(cache_path=cache, batch_size=1)
+        t2 = EnglishToGermanTranslator(cache_path=cache, batch_size=1)
         t2._load_cache()
-        assert _md5("Guten Morgen.") in t2._cache
+        assert _md5("Good morning.") in t2._cache
         out2 = t2.translate(df)
         assert out1["text"].iloc[0] == out2["text"].iloc[0]
 
@@ -530,12 +539,11 @@ class TestGutefragLoader:
         assert out["toxic"].iloc[0]       == 1.0
 
     def test_non_gutefrage_labels_are_nan(self, monkeypatch):
-        """Labels not annotated by gutefrage in the reduced schema must be NaN."""
+        """Labels not annotated by gutefrage must be NaN."""
         out = self._load(monkeypatch, _gutefrage_raw())
         # gutefrage annotates: hate_speech, insult, toxic
-        # not annotated: threat, impolite
-        for label in ("threat", "impolite"):
-            assert np.isnan(out[label].iloc[0]), f"{label} should be NaN"
+        # not annotated in the 4-label schema: threat
+        assert np.isnan(out["threat"].iloc[0]), "threat should be NaN"
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -630,9 +638,8 @@ class TestGutefragLoaderIntegration:
         for label in ("hate_speech", "insult", "toxic"):
             assert df[label].sum() > 0, f"Expected positives for {label}"
 
-        # Labels not annotated by gutefrage in the reduced schema must be NaN
-        for label in ("threat", "impolite"):
-            assert df[label].isna().all(), f"{label} should be all NaN"
+        # Labels not annotated by gutefrage in the 4-label schema must be NaN
+        assert df["threat"].isna().all(), "threat should be all NaN"
 
     def test_load_with_provenance_real_file(self):
         data_dir = Path(__file__).parent / "data" / "raw"
@@ -658,3 +665,119 @@ class TestGutefragLoaderIntegration:
                 assert (unmapped[label] == 0.0).all(), (
                     f"Row with no mapped reasons must not produce {label}=1"
                 )
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# DetoxLoader — unit tests (synthetic TSV files via tmp_path)
+# ─────────────────────────────────────────────────────────────────────────────
+
+class TestDetoxLoader:
+
+    def _write_detox(self, tmp_path: Path, toxicity_scores: list[float]) -> Path:
+        """
+        Write minimal Detox TSV files to tmp_path/detox/.
+
+        Creates toxicity_comments.tsv with the 'comment' column and
+        toxicity_annotations.tsv with per-worker toxicity scores.
+        One worker per row for simplicity.
+        """
+        detox_dir = tmp_path / "detox"
+        detox_dir.mkdir(parents=True)
+
+        comments = pd.DataFrame([
+            {"rev_id": i, "comment": f"text {i}", "split": "train"}
+            for i in range(len(toxicity_scores))
+        ])
+        annotations = pd.DataFrame([
+            {"rev_id": i, "worker_id": 1, "toxicity": score}
+            for i, score in enumerate(toxicity_scores)
+        ])
+
+        comments.to_csv(detox_dir / "toxicity_comments.tsv", sep="\t", index=False)
+        annotations.to_csv(detox_dir / "toxicity_annotations.tsv", sep="\t", index=False)
+        return tmp_path
+
+    def test_toxic_label_binary_threshold(self, tmp_path):
+        out = DetoxLoader().load(self._write_detox(tmp_path, [0.6]))
+        assert out["toxic"].iloc[0] == 1.0
+
+    def test_toxic_label_below_threshold(self, tmp_path):
+        out = DetoxLoader().load(self._write_detox(tmp_path, [0.3]))
+        assert out["toxic"].iloc[0] == 0.0
+
+    def test_other_labels_are_nan(self, tmp_path):
+        out = DetoxLoader().load(self._write_detox(tmp_path, [0.6]))
+        for label in ("hate_speech", "threat", "insult"):
+            assert np.isnan(out[label].iloc[0]), f"{label} should be NaN"
+
+    def test_schema_columns(self, tmp_path):
+        out = DetoxLoader().load(self._write_detox(tmp_path, [0.5]))
+        assert list(out.columns) == SCHEMA_COLUMNS
+
+    def test_language_is_en(self, tmp_path):
+        out = DetoxLoader().load(self._write_detox(tmp_path, [0.4, 0.7]))
+        assert (out["language"] == "en").all()
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# HOCON34kLoader — unit tests (synthetic CSV via tmp_path)
+# ─────────────────────────────────────────────────────────────────────────────
+
+class TestHOCON34kLoader:
+
+    def _write_hocon(self, tmp_path: Path, rows: list[dict]) -> Path:
+        """
+        Write a minimal HOCON34k CSV to tmp_path/.../hatespeech_hocon34k.csv.
+
+        Each row dict must contain: post_id, text, label_hs, split_all.
+        """
+        csv_dir = tmp_path / "hocon34k" / "corpus-hocon34k" / "datasets"
+        csv_dir.mkdir(parents=True)
+        pd.DataFrame(rows).to_csv(csv_dir / "hatespeech_hocon34k.csv", index=False)
+        return tmp_path
+
+    def test_hate_speech_majority_vote_positive(self, tmp_path):
+        # Three annotators for one post: mean = 0.67 >= 0.5 → hate_speech = 1.0
+        rows = [
+            {"post_id": 1, "text": "Hassrede hier.", "label_hs": 1.0, "split_all": "train"},
+            {"post_id": 1, "text": "Hassrede hier.", "label_hs": 1.0, "split_all": "train"},
+            {"post_id": 1, "text": "Hassrede hier.", "label_hs": 0.0, "split_all": "train"},
+        ]
+        out = HOCON34kLoader().load(self._write_hocon(tmp_path, rows))
+        assert out["hate_speech"].iloc[0] == 1.0
+
+    def test_hate_speech_majority_vote_negative(self, tmp_path):
+        # Three annotators: mean = 0.33 < 0.5 → hate_speech = 0.0
+        rows = [
+            {"post_id": 1, "text": "Normaler Text.", "label_hs": 0.0, "split_all": "train"},
+            {"post_id": 1, "text": "Normaler Text.", "label_hs": 0.0, "split_all": "train"},
+            {"post_id": 1, "text": "Normaler Text.", "label_hs": 1.0, "split_all": "train"},
+        ]
+        out = HOCON34kLoader().load(self._write_hocon(tmp_path, rows))
+        assert out["hate_speech"].iloc[0] == 0.0
+
+    def test_other_labels_are_nan(self, tmp_path):
+        rows = [{"post_id": 1, "text": "Text.", "label_hs": 0.0, "split_all": "train"}]
+        out = HOCON34kLoader().load(self._write_hocon(tmp_path, rows))
+        for label in ("toxic", "threat", "insult"):
+            assert np.isnan(out[label].iloc[0]), f"{label} should be NaN"
+
+    def test_schema_columns(self, tmp_path):
+        rows = [{"post_id": 1, "text": "Text.", "label_hs": 0.0, "split_all": "train"}]
+        out = HOCON34kLoader().load(self._write_hocon(tmp_path, rows))
+        assert list(out.columns) == SCHEMA_COLUMNS
+
+    def test_language_is_de(self, tmp_path):
+        rows = [{"post_id": 1, "text": "Text.", "label_hs": 0.0, "split_all": "train"}]
+        out = HOCON34kLoader().load(self._write_hocon(tmp_path, rows))
+        assert (out["language"] == "de").all()
+
+    def test_rows_without_split_get_none(self, tmp_path):
+        rows = [{"post_id": 1, "text": "Text.", "label_hs": 0.0, "split_all": ""}]
+        out = HOCON34kLoader().load(self._write_hocon(tmp_path, rows))
+        assert pd.isna(out["split"].iloc[0])
+
+
+# TestWikipediaPolitenessLoader has been removed.
+# WikipediaPolitenessLoader is an archived optional loader — it is no longer
+# part of the main 4-label pipeline (impolite was dropped from the schema).

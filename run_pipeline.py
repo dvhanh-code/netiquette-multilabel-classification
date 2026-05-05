@@ -17,6 +17,9 @@ Usage
     # Full pipeline: translate + assign splits
     python run_pipeline.py --translate --assign-splits
 
+    # Save an extra file that keeps translation metadata for LaBSE evaluation
+    python run_pipeline.py --translate --keep-translation-metadata
+
     # Process a subset of corpora only
     python run_pipeline.py --corpora gmhp7k jigsaw
 
@@ -25,22 +28,36 @@ Usage
 
 Output filenames (written to data/processed/)
 ----------------------------------------------
-    unified.parquet
-    unified_translated.parquet
-    unified_with_splits.parquet
-    unified_translated_with_splits.parquet
+    unified_with_quality.parquet
+    unified_with_quality_translated.parquet
+    unified_with_quality_with_splits.parquet
+    unified_with_quality_translated_with_splits.parquet
+
+    With --keep-translation-metadata (additional file, requires --translate):
+    unified_with_quality_translated_with_metadata.parquet
+    unified_with_quality_translated_with_splits_with_metadata.parquet
+
+Quality metadata columns always present in output
+--------------------------------------------------
+    is_gold        (bool) : True for gmhp7k / hocon34k / gutefrage
+    data_quality   (str)  : 'gold' | 'silver' | 'original_en'
 """
 
 import argparse
 import sys
 from pathlib import Path
 
+import logging
+logging.basicConfig(level=logging.INFO)
+
 from src.dataset import UnifiedCorpusDataset
-from src.dataset.schema import SCHEMA_COLUMNS
+from src.dataset.schema import OUTPUT_COLUMNS
+from src.preprocessing import add_data_quality_metadata, print_quality_summary
 
 DATA_DIR = Path(__file__).parent / "data" / "raw"
 CACHE_DIR = Path(__file__).parent / "data" / "cache"
-PROCESSED_DIR = Path(__file__).parent / "data" / "processed"
+PROCESSED_DIR = (Path(__file__).parent / "data" /
+                 "processed")
 
 _TRANSLATION_METADATA_COLUMNS = [
     "text_original",
@@ -55,7 +72,7 @@ _TRANSLATION_METADATA_COLUMNS = [
 
 def _output_filename(translate: bool, assign_splits: bool) -> str:
     """Return the parquet filename that reflects the processing options applied."""
-    parts = ["unified"]
+    parts = ["unified", "with_quality"]
     if translate:
         parts.append("translated")
     if assign_splits:
@@ -96,6 +113,15 @@ def _translate(dataset, batch_size, device):
         print(f"  Rows skipped (empty)         : {n_empty:,}")
 
 
+def _add_quality_metadata(dataset):
+    print("\n── Stage 2b: Quality metadata ───────────────────────────")
+    # Ensure is_translated exists — absent when --translate was not used
+    if "is_translated" not in dataset.df.columns:
+        dataset._df = dataset.df.assign(is_translated=False)
+    dataset._df = add_data_quality_metadata(dataset.df)
+    print_quality_summary(dataset.df)
+
+
 def _assign_splits(dataset):
     print("\n── Stage 3: Split assignment ─────────────────────────────────────")
     try:
@@ -132,16 +158,17 @@ def _print_stats(dataset, translate):
         n_de = int((dataset.df["language"] == "de").sum())
         print(f"\nGerman rows in final dataset: {n_de:,}")
 
-        if "is_translated" in dataset.df.columns:
-            n_silver = int(dataset.df["is_translated"].sum())
-            n_gold_de = int(
-                ((dataset.df["language"] == "de") & (~dataset.df["is_translated"])).sum()
-            )
-            print(f"German gold rows           : {n_gold_de:,}")
-            print(f"Translated silver rows     : {n_silver:,}")
+        if "data_quality" in dataset.df.columns:
+            n_gold = int((dataset.df["data_quality"] == "gold").sum())
+            n_silver = int((dataset.df["data_quality"] == "silver").sum())
+            n_original_en = int((dataset.df["data_quality"] == "original_en").sum())
+
+            print(f"  gold (authentic German)   : {n_gold:,}")
+            print(f"  silver (translated to de) : {n_silver:,}")
+            print(f"  original English rows     : {n_original_en:,}")
 
 
-def _save(dataset, translate, assign_splits):
+def _save(dataset, translate, assign_splits, keep_translation_metadata=False):
     print("\n── Stage 4: Saving processed dataset ────────────────────────────")
     PROCESSED_DIR.mkdir(parents=True, exist_ok=True)
 
@@ -158,11 +185,35 @@ def _save(dataset, translate, assign_splits):
     print(f"  Rows   : {len(save_df):,}")
     print(f"  Columns: {save_df.columns.tolist()}")
 
-    assert list(save_df.columns) == SCHEMA_COLUMNS, (
-        f"Unexpected columns — expected {SCHEMA_COLUMNS}, "
+    assert list(save_df.columns) == OUTPUT_COLUMNS, (
+        f"Unexpected columns — expected {OUTPUT_COLUMNS}, "
         f"got {save_df.columns.tolist()}"
     )
-    print("  Schema : OK (matches SCHEMA_COLUMNS)")
+    print("  Schema : OK (matches OUTPUT_COLUMNS)")
+
+    if keep_translation_metadata:
+        if not translate:
+            print("  Note: --keep-translation-metadata has no effect without --translate")
+        else:
+            meta_filename = filename.replace(".parquet", "_with_metadata.parquet")
+            meta_path = PROCESSED_DIR / meta_filename
+            missing_meta = [
+                c for c in _TRANSLATION_METADATA_COLUMNS
+                if c not in dataset.df.columns
+            ]
+            if missing_meta:
+                print(
+                    f"  WARNING: Metadata file not saved because columns are missing: {missing_meta}"
+                )
+            else:
+                dataset.df.to_parquet(meta_path, index=False)
+                print(f"  Saved (with metadata): {meta_path}")
+                print(f"  Rows   : {len(dataset.df):,}")
+                print(f"  Columns: {dataset.df.columns.tolist()}")
+
+            print(f"  Saved (with metadata): {meta_path}")
+            print(f"  Rows   : {len(dataset.df):,}")
+            print(f"  Columns: {dataset.df.columns.tolist()}")
 
     return out_path
 
@@ -171,17 +222,20 @@ def _save(dataset, translate, assign_splits):
 # Entry point
 # ---------------------------------------------------------------------------
 
-def main(corpora=None, translate=False, assign_splits=False, batch_size=32, device=None):
+def main(corpora=None, translate=False, assign_splits=False, batch_size=32, device=None,
+         keep_translation_metadata=False):
     dataset = _load(corpora)
 
     if translate:
         _translate(dataset, batch_size, device)
 
+    _add_quality_metadata(dataset)
+
     if assign_splits:
         _assign_splits(dataset)
 
     _print_stats(dataset, translate)
-    _save(dataset, translate, assign_splits)
+    _save(dataset, translate, assign_splits, keep_translation_metadata)
 
     print("\nDone.\n")
 
@@ -220,6 +274,16 @@ if __name__ == "__main__":
         default=None,
         help="Device for translation: cpu / cuda / mps (auto-detect if omitted).",
     )
+    parser.add_argument(
+        "--keep-translation-metadata",
+        action="store_true",
+        dest="keep_translation_metadata",
+        help=(
+            "Save an additional parquet file that retains translation metadata columns "
+            "(text_original, is_translated, translation_status) for LaBSE evaluation. "
+            "Has no effect without --translate."
+        ),
+    )
     args = parser.parse_args()
 
     main(
@@ -228,4 +292,5 @@ if __name__ == "__main__":
         assign_splits=args.assign_splits,
         batch_size=args.batch_size,
         device=args.device,
+        keep_translation_metadata=args.keep_translation_metadata,
     )
