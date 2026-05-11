@@ -4,6 +4,7 @@ from .detox import DetoxLoader
 from .jigsaw import JigsawLoader
 from .wikipedia_attacks import WikipediaAttacksLoader
 from .gutefrage import GutefragLoader
+from .rp_mod import RPModLoader
 
 # WikipediaPolitenessLoader is kept as an archived optional loader but is
 # intentionally excluded from ALL_LOADERS — it targets a politeness/spectrum
@@ -18,6 +19,7 @@ ALL_LOADERS = {
     "jigsaw":            JigsawLoader,
     "wikipedia_attacks": WikipediaAttacksLoader,
     "gutefrage":         GutefragLoader,
+    "rp_mod":            RPModLoader,
 }
 
 __all__ = [
@@ -27,6 +29,7 @@ __all__ = [
     "JigsawLoader",
     "WikipediaAttacksLoader",
     "GutefragLoader",
+    "RPModLoader",
     "ALL_LOADERS",
     # Archived optional loader — not part of the main pipeline:
     "WikipediaPolitenessLoader",

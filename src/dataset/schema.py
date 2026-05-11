@@ -34,6 +34,7 @@ CORPUS_LABELS: Dict[str, List[str]] = {
     "jigsaw":            ["hate_speech", "toxic", "threat", "insult"],
     "wikipedia_attacks": ["insult"],
     "gutefrage":         ["hate_speech", "insult", "toxic"],
+    "rp_mod":            ["hate_speech", "threat", "insult"],
 }
 
 # Full column order of the unified DataFrame (loader contract — do not add

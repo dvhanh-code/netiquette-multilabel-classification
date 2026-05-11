@@ -19,7 +19,7 @@ import pandas as pd
 # Constants
 # ---------------------------------------------------------------------------
 
-GOLD_SOURCES: frozenset[str] = frozenset({"gmhp7k", "hocon34k", "gutefrage"})
+GOLD_SOURCES: frozenset[str] = frozenset({"gmhp7k", "hocon34k", "gutefrage", "rp_mod"})
 """
 Corpora that contain authentic, human-authored German text with human
 annotations.  These are the only sources used for final evaluation.

@@ -117,7 +117,7 @@ class TestSchema:
     def test_all_corpora_present(self):
         expected = {
             "gmhp7k", "hocon34k", "detox", "jigsaw",
-            "wikipedia_attacks", "gutefrage",
+            "wikipedia_attacks", "gutefrage", "rp_mod",
         }
         assert expected == set(CORPUS_LABELS.keys())
 
@@ -776,6 +776,108 @@ class TestHOCON34kLoader:
         rows = [{"post_id": 1, "text": "Text.", "label_hs": 0.0, "split_all": ""}]
         out = HOCON34kLoader().load(self._write_hocon(tmp_path, rows))
         assert pd.isna(out["split"].iloc[0])
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# RPModLoader — unit tests (synthetic CSV via tmp_path)
+# ─────────────────────────────────────────────────────────────────────────────
+
+class TestRPModLoader:
+    from src.dataset.loaders.rp_mod import RPModLoader
+
+    def _write_rp_mod(self, tmp_path, rows):
+        rp_dir = tmp_path / "rp_mod"
+        rp_dir.mkdir(parents=True)
+        pd.DataFrame(rows).to_csv(
+            rp_dir / "RP-Mod-Crowd.csv", index=False
+        )
+        return tmp_path
+
+    def _base_row(self, **kwargs):
+        defaults = {
+            "Text": "Ein normaler Kommentar.",
+            "Racism Count Crowd":        0.0,
+            "Sexism Count Crowd":        0.0,
+            "Threat Count Crowd":        0.0,
+            "Insult Count Crowd":        0.0,
+            "Profanity Count Crowd":     0.0,
+            "Meta Count Crowd":          0.0,
+            "Advertisement Count Crowd": 0.0,
+        }
+        return {**defaults, **kwargs}
+
+    def test_threat_positive_at_threshold_2(self, tmp_path):
+        from src.dataset.loaders.rp_mod import RPModLoader
+        out = RPModLoader().load(self._write_rp_mod(tmp_path, [
+            self._base_row(**{"Threat Count Crowd": 2.0}),
+        ]))
+        assert out["threat"].iloc[0] == 1.0
+
+    def test_threat_negative_below_threshold(self, tmp_path):
+        from src.dataset.loaders.rp_mod import RPModLoader
+        out = RPModLoader().load(self._write_rp_mod(tmp_path, [
+            self._base_row(**{"Threat Count Crowd": 1.0}),
+        ]))
+        assert out["threat"].iloc[0] == 0.0
+
+    def test_hate_speech_from_racism(self, tmp_path):
+        from src.dataset.loaders.rp_mod import RPModLoader
+        out = RPModLoader().load(self._write_rp_mod(tmp_path, [
+            self._base_row(**{"Racism Count Crowd": 2.0, "Sexism Count Crowd": 0.0}),
+        ]))
+        assert out["hate_speech"].iloc[0] == 1.0
+
+    def test_hate_speech_from_sexism_only(self, tmp_path):
+        from src.dataset.loaders.rp_mod import RPModLoader
+        out = RPModLoader().load(self._write_rp_mod(tmp_path, [
+            self._base_row(**{"Racism Count Crowd": 0.0, "Sexism Count Crowd": 2.0}),
+        ]))
+        assert out["hate_speech"].iloc[0] == 1.0
+
+    def test_hate_speech_negative_both_below(self, tmp_path):
+        from src.dataset.loaders.rp_mod import RPModLoader
+        out = RPModLoader().load(self._write_rp_mod(tmp_path, [
+            self._base_row(**{"Racism Count Crowd": 1.0, "Sexism Count Crowd": 1.0}),
+        ]))
+        assert out["hate_speech"].iloc[0] == 0.0
+
+    def test_insult_positive(self, tmp_path):
+        from src.dataset.loaders.rp_mod import RPModLoader
+        out = RPModLoader().load(self._write_rp_mod(tmp_path, [
+            self._base_row(**{"Insult Count Crowd": 3.0}),
+        ]))
+        assert out["insult"].iloc[0] == 1.0
+
+    def test_toxic_is_always_nan(self, tmp_path):
+        from src.dataset.loaders.rp_mod import RPModLoader
+        out = RPModLoader().load(self._write_rp_mod(tmp_path, [
+            self._base_row(),
+        ]))
+        assert np.isnan(out["toxic"].iloc[0])
+
+    def test_unannotated_rows_dropped(self, tmp_path):
+        from src.dataset.loaders.rp_mod import RPModLoader
+        rows = [
+            self._base_row(**{"Threat Count Crowd": float("nan")}),  # dropped
+            self._base_row(**{"Threat Count Crowd": 0.0}),           # kept
+        ]
+        out = RPModLoader().load(self._write_rp_mod(tmp_path, rows))
+        assert len(out) == 1
+
+    def test_schema_columns(self, tmp_path):
+        from src.dataset.loaders.rp_mod import RPModLoader
+        out = RPModLoader().load(self._write_rp_mod(tmp_path, [self._base_row()]))
+        assert list(out.columns) == SCHEMA_COLUMNS
+
+    def test_language_is_de(self, tmp_path):
+        from src.dataset.loaders.rp_mod import RPModLoader
+        out = RPModLoader().load(self._write_rp_mod(tmp_path, [self._base_row()]))
+        assert (out["language"] == "de").all()
+
+    def test_source_is_rp_mod(self, tmp_path):
+        from src.dataset.loaders.rp_mod import RPModLoader
+        out = RPModLoader().load(self._write_rp_mod(tmp_path, [self._base_row()]))
+        assert (out["source"] == "rp_mod").all()
 
 
 # TestWikipediaPolitenessLoader has been removed.
