@@ -1,0 +1,6 @@
+{
+  "hate_speech": 0.05,
+  "toxic": 0.05,
+  "threat": 0.5,
+  "insult": 0.05
+}
