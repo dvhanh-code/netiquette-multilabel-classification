@@ -433,7 +433,7 @@ def main():
     print(f"Best val macro S: {best_val_s:.4f}")
 
     print("\nLoading best model...")
-    model.load_state_dict(torch.load(output_dir / "best_model" / "pytorch_model.bin", map_location=device))
+    model.load_state_dict(torch.load(output_dir / "best_model" / "pytorch_model.bin", map_location=device, weights_only=True))
     model.to(device)
 
     print("\nPredicting validation set for threshold tuning...")
