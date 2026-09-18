@@ -1,0 +1,29 @@
+dataset,label,total,annotated,missing_nan,negative_0,positive_1,annotation_coverage
+GMHP7k,hate_speech,7206,7206,0,5580,1626,1.0
+GMHP7k,toxic,7206,0,7206,0,0,0.0
+GMHP7k,threat,7206,0,7206,0,0,0.0
+GMHP7k,insult,7206,0,7206,0,0,0.0
+HOCON34k,hate_speech,34260,34260,0,29020,5240,1.0
+HOCON34k,toxic,34260,0,34260,0,0,0.0
+HOCON34k,threat,34260,0,34260,0,0,0.0
+HOCON34k,insult,34260,0,34260,0,0,0.0
+Gutefrage,hate_speech,18179,18179,0,18143,36,1.0
+Gutefrage,toxic,18179,18179,0,12722,5457,1.0
+Gutefrage,threat,18179,0,18179,0,0,0.0
+Gutefrage,insult,18179,18179,0,14182,3997,1.0
+RP-Mod,hate_speech,28685,28685,0,26108,2577,1.0
+RP-Mod,toxic,28685,0,28685,0,0,0.0
+RP-Mod,threat,28685,28685,0,28547,138,1.0
+RP-Mod,insult,28685,28685,0,24040,4645,1.0
+Jigsaw,hate_speech,216685,216685,0,214683,2002,1.0
+Jigsaw,toxic,216685,216685,0,196311,20374,1.0
+Jigsaw,threat,216685,216685,0,216046,639,1.0
+Jigsaw,insult,216685,216685,0,206027,10658,1.0
+Detox,hate_speech,111347,0,111347,0,0,0.0
+Detox,toxic,111347,111347,0,100604,10743,1.0
+Detox,threat,111347,0,111347,0,0,0.0
+Detox,insult,111347,0,111347,0,0,0.0
+Wikipedia Attacks,hate_speech,36880,0,36880,0,0,0.0
+Wikipedia Attacks,toxic,36880,0,36880,0,0,0.0
+Wikipedia Attacks,threat,36880,0,36880,0,0,0.0
+Wikipedia Attacks,insult,36880,36880,0,34216,2664,1.0

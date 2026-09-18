@@ -1,0 +1,45 @@
+{
+  "final_total": 453242,
+  "gold": 88330,
+  "silver": 364912,
+  "sources": {
+    "GMHP7k": 7206,
+    "HOCON34k": 34260,
+    "Gutefrage": 18179,
+    "RP-Mod": 28685,
+    "Jigsaw": 216685,
+    "Detox": 111347,
+    "Wikipedia Attacks": 36880
+  },
+  "splits": {
+    "train": 426742,
+    "test": 13250,
+    "val": 13250
+  },
+  "labels": {
+    "hate_speech": {
+      "annotated": 305015,
+      "missing": 148227,
+      "positive": 11481,
+      "negative": 293534
+    },
+    "toxic": {
+      "annotated": 346211,
+      "missing": 107031,
+      "positive": 36574,
+      "negative": 309637
+    },
+    "threat": {
+      "annotated": 245370,
+      "missing": 207872,
+      "positive": 777,
+      "negative": 244593
+    },
+    "insult": {
+      "annotated": 300429,
+      "missing": 152813,
+      "positive": 21964,
+      "negative": 278465
+    }
+  }
+}

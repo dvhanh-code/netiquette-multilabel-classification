@@ -114,12 +114,13 @@ The frozen dataset used for all reported experiments,
 3. **Gold/Silver quality metadata** (`src/preprocessing/quality.py`): the
    four gold sources are tagged `data_quality="gold"`; translated English
    rows become `data_quality="silver"`.
-4. **LaBSE semantic similarity evaluation** (`sentence-transformers/LaBSE`,
-   `src/evaluation/translation_quality.py`) scores each translated pair
-   against its English source.
-5. **Filtering** at a project-specific LaBSE threshold of `>= 0.55` — a
-   heuristic quality cutoff, not proof every pragmatic/tonal nuance
-   survived translation.
+4. **LaBSE semantic similarity evaluation** using
+   `sentence-transformers/LaBSE`
+   (`src/evaluation/translation_quality.py`) to assess semantic agreement
+   between translated German text and its English source.
+5. **LaBSE-based filtering** retained translated rows with a similarity score
+   of `>= 0.55`. This threshold is a project-specific heuristic quality
+   cutoff and does not prove preservation of every pragmatic or tonal nuance.
 6. **Exact-text deduplication** (`src/dataset/deduplicate.py`), keeping the
    best representative row per duplicate (gold over silver, more
    positive/annotated labels, longer text, as tiebreakers).
@@ -128,13 +129,28 @@ The frozen dataset used for all reported experiments,
    split ~70/15/15 via multilabel stratification (`iterstrat`, seed `42`).
    Validation and test splits are gold-only.
 
-This evolved across several separate scripts rather than one entry point.
-`run_pipeline.py` implements stages 1–3 and can optionally assign splits,
-but does **not** perform LaBSE filtering or deduplication (those live in
-`src/evaluation/translation_quality.py` and `src/dataset/deduplicate.py`),
-so it alone does not reproduce `data/final/unified_final_v1.parquet` — that
-file is the frozen output of the full pipeline above
-(`data/final/DATASET_VERSION.md`, `data/final/unified_final_v1_metadata.json`).
+The preprocessing workflow evolved across several scripts and interactive
+processing steps rather than one fully preserved end-to-end entry point.
+`run_pipeline.py` covers corpus loading, translation and quality metadata,
+but does not by itself reproduce the complete frozen dataset. After LaBSE-
+based filtering at `>= 0.55`, the intermediate dataset
+`data/processed/unified_with_quality_translated_filtered_labse055.parquet`
+contained 573,366 rows.
+
+The finalization step is implemented in `src/dataset/deduplicate.py`. It
+normalizes texts using stripped text keys and removes duplicate texts while
+prioritizing gold over silver rows, followed by rows with more positive
+labels, more annotated labels, longer text, and finally the lower original
+index as a deterministic tiebreaker. This reduces the dataset from 573,366
+to 453,242 rows. The script then assigns fresh splits via
+`assign_fresh_splits`: all silver rows are assigned to training, while gold
+rows are multilabel-stratified into approximately 70/15/15 train,
+validation, and test splits.
+
+The resulting
+`data/processed/unified_final_deduplicated.parquet` is identical to the
+frozen dataset used for the reported experiments,
+`data/final/unified_final_v1.parquet`.
 
 Final dataset statistics: 453,242 rows total (88,330 gold / 364,912
 silver); split into 426,742 train / 13,250 val / 13,250 test rows.
@@ -217,11 +233,10 @@ The primary reported local model is **Qwen2.5:7B**. Relevant scripts:
 and `experiments/run_llm_prompt_ablation.py` (prompt-variant ablation).
 
 Features: joint classification (single JSON call) and per-label
-classification (one binary call per label, avoiding label-suppression
-bias), five prompt variants (`joint_basic`, `joint_definitions`,
-`joint_fewshot`, `joint_rules`, `joint_selfcheck`), resume-safe JSONL
-checkpointing, and multi-strategy JSON parsing with reasoning-block
-stripping for chain-of-thought models.
+classification (one independent binary call per label), five prompt variants
+(`joint_basic`, `joint_definitions`, `joint_fewshot`, `joint_rules`,
+`joint_selfcheck`), resume-safe JSONL checkpointing, and multi-strategy JSON
+parsing with reasoning-block stripping for chain-of-thought models.
 
 `src/llm/model_configs.py` defines generation settings for a larger set of
 models (Qwen2.5/3, Llama 3.1/3.2, Gemma 3, Mistral, DeepSeek-R1, Phi-4);
@@ -234,20 +249,16 @@ Core files: `src/llm/gemini_client.py`, `src/llm/inference.py`,
 `src/llm/platform_rules.py`.
 
 The reported model is **Gemini 2.5 Flash** (`gemini-2.5-flash`), as
-recorded directly in the result artifacts
+recorded directly in the corresponding result artifacts
 (`results/llm_gemini_flash_full/summary.json`,
-`results/llm_gemini_cot/summary.json`) — the authoritative source for which
-model was actually used. This matches the default in `GeminiClient`
-(`src/llm/gemini_client.py`). `src/llm/inference.py` separately carries an
-older `gemini-1.5-flash` default in `LLMInferenceEngine.__init__`; this is
-a stale default on a generic helper class, not evidence that the thesis
-used Gemini 1.5.
-
+`results/llm_gemini_cot/summary.json`). The Gemini implementation and
+experiment entry points use `gemini-2.5-flash` as their current default.
 Experimental conditions: Zero-Shot, Few-Shot, and Chain-of-Thought (CoT),
 run via `experiments/run_llm_eval.py`. CoT is an experimental condition
 (`results/llm_gemini_cot/`), not a demonstrated improvement — see Section
-11. CoT completed 12,049 of 13,250 test rows due to API constraints, and
-its comparison to the joint (non-CoT) run is handled accordingly.
+11. The CoT run produced valid predictions for 12,049 of 13,250 test rows;
+its comparison with the Few-Shot configuration without CoT is therefore
+performed on the common-success subset.
 
 ## 10. Hybrid BERT–LLM Experiments
 

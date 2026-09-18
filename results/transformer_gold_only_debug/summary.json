@@ -1,0 +1,42 @@
+{
+  "model_name": "bert-base-german-cased",
+  "mode": "gold_only",
+  "best_epoch": 1,
+  "best_val_macro_s_05": 0.40726899696169205,
+  "thresholds": {
+    "hate_speech": 0.05,
+    "toxic": 0.35000000000000003,
+    "threat": 0.1,
+    "insult": 0.1
+  },
+  "val_macro": {
+    "label": "MACRO",
+    "split": "val",
+    "threshold": NaN,
+    "precision": 0.28159660171787626,
+    "recall": 0.5619703904028847,
+    "f1": 0.35614410357444415,
+    "f2": 0.44414162979301886,
+    "mcc": 0.262139141380053,
+    "mcc_norm": 0.6310695706900266,
+    "s_score": 0.5376056002415227,
+    "support_pos": 275,
+    "support_neg": 1809,
+    "support_total": 2084
+  },
+  "test_macro": {
+    "label": "MACRO",
+    "split": "test",
+    "threshold": NaN,
+    "precision": 0.26493898139177435,
+    "recall": 0.5267846673007518,
+    "f1": 0.32814004134061714,
+    "f2": 0.4076517138995752,
+    "mcc": 0.22751775066388102,
+    "mcc_norm": 0.6137588753319405,
+    "s_score": 0.5107052946157579,
+    "support_pos": 258,
+    "support_neg": 1836,
+    "support_total": 2094
+  }
+}

@@ -1,0 +1,59 @@
+{
+  "model_name": "deepset/gbert-large",
+  "mode": "gold_only",
+  "max_length": 128,
+  "batch_size": 8,
+  "loss": "MaskedFocalLoss",
+  "gamma": 2.0,
+  "alpha": [
+    0.9689891029208481,
+    0.8974783356369601,
+    0.9968947904300398,
+    0.932340018301585
+  ],
+  "best_epoch": 3,
+  "best_val_s": 0.6381258744714764,
+  "epochs_done": [
+    {
+      "epoch": 1,
+      "train_loss": 0.017619922556942707,
+      "val_macro_s": 0.5102975032824819
+    },
+    {
+      "epoch": 2,
+      "train_loss": 0.01508857313652337,
+      "val_macro_s": 0.6271082235161762
+    },
+    {
+      "epoch": 3,
+      "train_loss": 0.01127116834776788,
+      "val_macro_s": 0.6381258744714764
+    },
+    {
+      "epoch": 4,
+      "train_loss": 0.007659841959211527,
+      "val_macro_s": 0.6320379486683159
+    },
+    {
+      "epoch": 5,
+      "train_loss": 0.005024306680416532,
+      "val_macro_s": 0.6226573004061433
+    }
+  ],
+  "status": "done",
+  "test_macro": {
+    "label": "MACRO",
+    "split": "test",
+    "threshold": NaN,
+    "precision": 0.3543551887020891,
+    "recall": 0.7056295497751194,
+    "f1": 0.4565703139738614,
+    "f2": 0.5661801952496704,
+    "mcc": 0.3947598340479284,
+    "mcc_norm": 0.6973799170239643,
+    "s_score": 0.6317800561368174,
+    "support_pos": 3558,
+    "support_neg": 23888,
+    "support_total": 27446
+  }
+}

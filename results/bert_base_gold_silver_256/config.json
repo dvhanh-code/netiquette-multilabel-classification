@@ -1,0 +1,14 @@
+{
+  "model_name": "bert-base-german-cased",
+  "mode": "gold_silver",
+  "max_length": 256,
+  "batch_size": 4,
+  "epochs": 3,
+  "learning_rate": 2e-05,
+  "warmup_ratio": 0.03,
+  "weight_decay": 0.01,
+  "loss": "MaskedBCEWithLogitsLoss",
+  "optimizer": "AdamW",
+  "data_path": "data/final/unified_final_v1.parquet",
+  "seed": 42
+}

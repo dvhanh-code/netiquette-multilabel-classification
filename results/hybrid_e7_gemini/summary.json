@@ -1,0 +1,51 @@
+{
+  "split": "test",
+  "bert_dir": "results/gbert_large_gold_silver_128_focal_lr5e6",
+  "llm_dir": "results/llm_gemini_flash_full",
+  "bert_thresholds": {
+    "hate_speech": 0.55,
+    "toxic": 0.3,
+    "threat": 0.8,
+    "insult": 0.45
+  },
+  "strategies_used": [
+    "Hybrid: Average",
+    "Hybrid: Confidence-gated",
+    "Hybrid: Union",
+    "Hybrid: Intersection"
+  ],
+  "best_system": "Hybrid: Confidence-gated",
+  "best_macro_s_score": 0.49809475661625585,
+  "macro_by_system": [
+    {
+      "system": "BERT (tuned thresholds)",
+      "s_score": 0.49233038577104815,
+      "f1": 0.249740165055886
+    },
+    {
+      "system": "LLM only (Gemini Flash)",
+      "s_score": 0.46099020940966406,
+      "f1": 0.2365540364820843
+    },
+    {
+      "system": "Hybrid: Average",
+      "s_score": 0.47060630431627476,
+      "f1": 0.24593470835548498
+    },
+    {
+      "system": "Hybrid: Confidence-gated",
+      "s_score": 0.49809475661625585,
+      "f1": 0.265519188070181
+    },
+    {
+      "system": "Hybrid: Union",
+      "s_score": 0.4944904677347946,
+      "f1": 0.23629092093773077
+    },
+    {
+      "system": "Hybrid: Intersection",
+      "s_score": 0.44866282463445056,
+      "f1": 0.23824541119620007
+    }
+  ]
+}

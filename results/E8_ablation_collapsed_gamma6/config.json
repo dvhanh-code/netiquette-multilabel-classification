@@ -1,0 +1,28 @@
+{
+  "experiment": "E8",
+  "note": "gbert-large gold_silver MaskedASL — gamma_neg=6, threat_weight=5.0",
+  "model_name": "deepset/gbert-large",
+  "mode": "gold_silver",
+  "max_length": 128,
+  "batch_size": 8,
+  "epochs": 5,
+  "patience": 2,
+  "learning_rate": 5e-06,
+  "warmup_ratio": 0.1,
+  "loss": "MaskedASL",
+  "asl_gamma_pos": 0,
+  "asl_gamma_neg": 6,
+  "asl_clip": 0.05,
+  "label_weights": {
+    "hate_speech": 1.0,
+    "toxic": 1.0,
+    "threat": 5.0,
+    "insult": 1.0
+  },
+  "optimizer": "AdamW",
+  "weight_decay": 0.01,
+  "seed": 42,
+  "tokenizer": "BertTokenizer",
+  "encoder": "BertModel",
+  "reference": "Ridnik et al. (2021, ICCV) arXiv:2009.14119"
+}

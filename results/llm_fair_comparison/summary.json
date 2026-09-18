@@ -1,0 +1,33 @@
+{
+  "run_a": {
+    "dir": "results/llm_gemini_flash_full",
+    "name": "Gemini Joint",
+    "n_successful": 13250
+  },
+  "run_b": {
+    "dir": "results/llm_gemini_cot",
+    "name": "Gemini CoT",
+    "n_successful": 12049
+  },
+  "n_total": 13250,
+  "n_common": 12049,
+  "n_excluded": 1201,
+  "macro_s_a": 0.5926129953700681,
+  "macro_s_a_ci": [
+    0.5636152067304339,
+    0.6185809527731282
+  ],
+  "macro_s_b": 0.6015138012069903,
+  "macro_s_b_ci": [
+    0.5703785150517873,
+    0.6276449082196436
+  ],
+  "delta_macro_s": 0.00890080583692221,
+  "ci_overlap": true,
+  "per_label_delta_s": {
+    "hate_speech": -0.0019314412476594267,
+    "toxic": 0.004495183916330636,
+    "threat": 0.027774440873206574,
+    "insult": 0.005265039805811167
+  }
+}

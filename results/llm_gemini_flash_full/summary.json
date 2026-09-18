@@ -1,0 +1,42 @@
+{
+  "model": "gemini-2.5-flash",
+  "split": "test",
+  "n_total": 13250,
+  "n_successful": 13250,
+  "n_failed": 0,
+  "use_cot": false,
+  "use_few_shot": true,
+  "platform": null,
+  "macro_f1": {
+    "mean": 0.4509748175693018,
+    "lower": 0.42165907299560346,
+    "upper": 0.48043359061819935
+  },
+  "macro_s_score": {
+    "mean": 0.5901250996699947,
+    "lower": 0.5614899754997605,
+    "upper": 0.6163514896614487
+  },
+  "per_label": {
+    "hate_speech": {
+      "f1": 0.37892823126969505,
+      "s_score": 0.5036739879787782,
+      "n_positives": 1422
+    },
+    "toxic": {
+      "f1": 0.6741865051330573,
+      "s_score": 0.7280901966296944,
+      "n_positives": 819
+    },
+    "threat": {
+      "f1": 0.2055897047095205,
+      "s_score": 0.46489227850522286,
+      "n_positives": 21
+    },
+    "insult": {
+      "f1": 0.5449289170007862,
+      "s_score": 0.6630096743701227,
+      "n_positives": 1296
+    }
+  }
+}

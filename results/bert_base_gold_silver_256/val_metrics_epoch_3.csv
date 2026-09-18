@@ -1,0 +1,6 @@
+label,split,threshold,precision,recall,f1,f2,mcc,mcc_norm,s_score,support_pos,support_neg,support_total
+hate_speech,val,0.5,0.0,0.0,0.0,0.0,0.0,0.5,0.25,1422,11828,13250
+toxic,val,0.5,0.0,0.0,0.0,0.0,0.0,0.5,0.25,819,1903,2722
+threat,val,0.5,0.0,0.0,0.0,0.0,0.0,0.5,0.25,21,4274,4295
+insult,val,0.5,0.0,0.0,0.0,0.0,0.0,0.5,0.25,1296,5721,7017
+MACRO,val,,0.0,0.0,0.0,0.0,0.0,0.5,0.25,3558,23726,27284

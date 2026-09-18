@@ -1,0 +1,16 @@
+{
+  "model_name": "deepset/gbert-large",
+  "mode": "gold_only",
+  "max_length": 256,
+  "batch_size": 2,
+  "epochs": 3,
+  "data_path": "data/final/unified_final_v1.parquet",
+  "local_out": "results/gbert_large_gold_only_256",
+  "drive_out": "/content/drive/MyDrive/masterarbeit/results/gbert_large_gold_only_256",
+  "loss": "MaskedBCEWithLogitsLoss",
+  "optimizer": "AdamW",
+  "learning_rate": 1e-05,
+  "weight_decay": 0.01,
+  "warmup_ratio": 0.03,
+  "seed": 42
+}

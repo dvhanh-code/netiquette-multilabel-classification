@@ -1,0 +1,35 @@
+{
+  "model_name": "bert-base-german-cased",
+  "mode": "gold_silver",
+  "epoch": 5,
+  "best_epoch": 4,
+  "best_val_s": 0.5871836030773784,
+  "epochs_done": [
+    {
+      "epoch": 1,
+      "train_loss": 0.008770950799939023,
+      "val_macro_s": 0.5651974402351254
+    },
+    {
+      "epoch": 2,
+      "train_loss": 0.006435855088455275,
+      "val_macro_s": 0.5725646006040851
+    },
+    {
+      "epoch": 3,
+      "train_loss": 0.004685019557616314,
+      "val_macro_s": 0.5741601203266464
+    },
+    {
+      "epoch": 4,
+      "train_loss": 0.003267742796216759,
+      "val_macro_s": 0.5871836030773784
+    },
+    {
+      "epoch": 5,
+      "train_loss": 0.002270062375848035,
+      "val_macro_s": 0.5754357728588197
+    }
+  ],
+  "status": "training"
+}

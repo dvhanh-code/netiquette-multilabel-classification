@@ -1,0 +1,8 @@
+dataset,hate_speech,toxic,threat,insult
+GMHP7k,1.0,0.0,0.0,0.0
+HOCON34k,1.0,0.0,0.0,0.0
+Gutefrage,1.0,1.0,0.0,1.0
+RP-Mod,1.0,0.0,1.0,1.0
+Jigsaw,1.0,1.0,1.0,1.0
+Detox,0.0,1.0,0.0,0.0
+Wikipedia Attacks,0.0,0.0,0.0,1.0

@@ -1,0 +1,77 @@
+{
+  "model": "qwen2.5:7b",
+  "n_rows": 500,
+  "seed": 42,
+  "variants": [
+    {
+      "variant": "joint_basic",
+      "macro_f1": 0.2669,
+      "macro_f2": 0.2693,
+      "macro_s_score": 0.4285,
+      "macro_mcc": 0.1755,
+      "n_total": 500,
+      "n_success": 450,
+      "n_fallback": 0,
+      "n_resumed": 50,
+      "avg_latency_s": 2.272,
+      "p95_latency_s": 3.158,
+      "total_runtime_s": 1022.6
+    },
+    {
+      "variant": "joint_definitions",
+      "macro_f1": 0.3159,
+      "macro_f2": 0.3105,
+      "macro_s_score": 0.4616,
+      "macro_mcc": 0.2254,
+      "n_total": 500,
+      "n_success": 450,
+      "n_fallback": 0,
+      "n_resumed": 50,
+      "avg_latency_s": 2.297,
+      "p95_latency_s": 3.047,
+      "total_runtime_s": 1033.7
+    },
+    {
+      "variant": "joint_fewshot",
+      "macro_f1": 0.3024,
+      "macro_f2": 0.2978,
+      "macro_s_score": 0.4492,
+      "macro_mcc": 0.201,
+      "n_total": 500,
+      "n_success": 450,
+      "n_fallback": 0,
+      "n_resumed": 50,
+      "avg_latency_s": 2.744,
+      "p95_latency_s": 3.928,
+      "total_runtime_s": 1234.8
+    },
+    {
+      "variant": "joint_rules",
+      "macro_f1": 0.2964,
+      "macro_f2": 0.2967,
+      "macro_s_score": 0.4471,
+      "macro_mcc": 0.1948,
+      "n_total": 500,
+      "n_success": 450,
+      "n_fallback": 0,
+      "n_resumed": 50,
+      "avg_latency_s": 2.794,
+      "p95_latency_s": 3.633,
+      "total_runtime_s": 1257.5
+    },
+    {
+      "variant": "joint_selfcheck",
+      "macro_f1": 0.2986,
+      "macro_f2": 0.3068,
+      "macro_s_score": 0.4514,
+      "macro_mcc": 0.192,
+      "n_total": 500,
+      "n_success": 450,
+      "n_fallback": 0,
+      "n_resumed": 50,
+      "avg_latency_s": 2.534,
+      "p95_latency_s": 3.421,
+      "total_runtime_s": 1140.2
+    }
+  ]
+}

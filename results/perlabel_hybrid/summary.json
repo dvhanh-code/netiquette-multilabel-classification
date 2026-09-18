@@ -1,0 +1,51 @@
+{
+  "routing_static": {
+    "hate_speech": "bert",
+    "toxic": "bert",
+    "threat": "bert",
+    "insult": "bert"
+  },
+  "uncertainty_radius": 0.15,
+  "llm_fallback_rows": 0,
+  "frac_routed_to_llm": {
+    "hate_speech": 0.18890566037735848,
+    "toxic": 0.21690566037735848,
+    "threat": 0.021358490566037735,
+    "insult": 0.1790943396226415
+  },
+  "paired_bootstrap_vs_bert": {
+    "LLM only (E10, BERT-fallback)": {
+      "delta": -0.05311734544462708,
+      "ci": [
+        -0.09649906799407208,
+        -0.010340590487417617
+      ],
+      "significant": true
+    },
+    "Per-label static routing": {
+      "delta": 0.0,
+      "ci": [
+        0.0,
+        0.0
+      ],
+      "significant": false
+    },
+    "Uncertainty routing (r=0.15)": {
+      "delta": -0.006245170111229417,
+      "ci": [
+        -0.04273565634698834,
+        0.03084527419828866
+      ],
+      "significant": false
+    },
+    "Uncertainty threat-only (r=0.15)": {
+      "delta": -0.013170213994886487,
+      "ci": [
+        -0.050741117481372236,
+        0.023492335223200288
+      ],
+      "significant": false
+    }
+  },
+  "note": "Static routing uses BERT val-S vs published E10 scores as prior (no test leakage). LLM-failed rows fall back to BERT."
+}

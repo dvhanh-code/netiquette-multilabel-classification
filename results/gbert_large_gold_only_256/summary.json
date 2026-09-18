@@ -1,0 +1,41 @@
+{
+  "model_name": "deepset/gbert-large",
+  "mode": "gold_only",
+  "max_length": 256,
+  "batch_size": 2,
+  "best_epoch": 3,
+  "best_val_s": 0.5190705880052524,
+  "epochs_done": [
+    {
+      "epoch": 1,
+      "train_loss": 0.46542063379033194,
+      "val_macro_s": 0.4153519713594244
+    },
+    {
+      "epoch": 2,
+      "train_loss": 0.4092230584697002,
+      "val_macro_s": 0.4880014718833418
+    },
+    {
+      "epoch": 3,
+      "train_loss": 0.332930883568642,
+      "val_macro_s": 0.5190705880052524
+    }
+  ],
+  "status": "done",
+  "test_macro": {
+    "label": "MACRO",
+    "split": "test",
+    "threshold": NaN,
+    "precision": 0.44206960248486427,
+    "recall": 0.38629549560456733,
+    "f1": 0.4121184594685864,
+    "f2": 0.39619014199654634,
+    "mcc": 0.34295283861069886,
+    "mcc_norm": 0.6714764193053495,
+    "s_score": 0.5338332806509478,
+    "support_pos": 3558,
+    "support_neg": 23888,
+    "support_total": 27446
+  }
+}

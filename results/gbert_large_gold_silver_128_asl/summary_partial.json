@@ -1,0 +1,15 @@
+{
+  "model_name": "deepset/gbert-large",
+  "mode": "gold_silver",
+  "epoch": 1,
+  "best_epoch": 1,
+  "best_val_s": 0.6143885311904411,
+  "epochs_done": [
+    {
+      "epoch": 1,
+      "train_loss": 0.03518792947111404,
+      "val_macro_s": 0.6143885311904411
+    }
+  ],
+  "status": "training"
+}

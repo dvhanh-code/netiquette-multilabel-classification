@@ -1,0 +1,59 @@
+{
+  "model_name": "bert-base-german-cased",
+  "mode": "gold_silver",
+  "max_length": 128,
+  "batch_size": 16,
+  "loss": "MaskedFocalLoss",
+  "gamma": 2.0,
+  "alpha": [
+    0.9689891029208481,
+    0.8974783356369601,
+    0.9968947904300398,
+    0.932340018301585
+  ],
+  "best_epoch": 4,
+  "best_val_s": 0.5871836030773784,
+  "epochs_done": [
+    {
+      "epoch": 1,
+      "train_loss": 0.008770950799939023,
+      "val_macro_s": 0.5651974402351254
+    },
+    {
+      "epoch": 2,
+      "train_loss": 0.006435855088455275,
+      "val_macro_s": 0.5725646006040851
+    },
+    {
+      "epoch": 3,
+      "train_loss": 0.004685019557616314,
+      "val_macro_s": 0.5741601203266464
+    },
+    {
+      "epoch": 4,
+      "train_loss": 0.003267742796216759,
+      "val_macro_s": 0.5871836030773784
+    },
+    {
+      "epoch": 5,
+      "train_loss": 0.002270062375848035,
+      "val_macro_s": 0.5754357728588197
+    }
+  ],
+  "status": "done",
+  "test_macro": {
+    "label": "MACRO",
+    "split": "test",
+    "threshold": NaN,
+    "precision": 0.304767862178829,
+    "recall": 0.6357603952540662,
+    "f1": 0.3996090353621173,
+    "f2": 0.5030629066131842,
+    "mcc": 0.315822392458967,
+    "mcc_norm": 0.6579111962294835,
+    "s_score": 0.5804870514213338,
+    "support_pos": 3558,
+    "support_neg": 23888,
+    "support_total": 27446
+  }
+}

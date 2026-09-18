@@ -1,0 +1,41 @@
+{
+  "model": "qwen2.5:7b",
+  "ollama_url": "http://localhost:11434",
+  "n_total": 5,
+  "n_success": 5,
+  "n_fallback": 0,
+  "macro_f1": 0.16666666666666666,
+  "macro_f2": 0.1388888888888889,
+  "macro_s_score": 0.3577177216754316,
+  "macro_mcc": 0.15309310892394865,
+  "per_label": {
+    "hate_speech": {
+      "f1": 0.6666666666666666,
+      "f2": 0.5555555555555556,
+      "s_score": 0.6808708867017265,
+      "support_pos": 2,
+      "support_total": 5
+    },
+    "toxic": {
+      "f1": 0.0,
+      "f2": 0.0,
+      "s_score": 0.25,
+      "support_pos": 0,
+      "support_total": 0
+    },
+    "threat": {
+      "f1": 0.0,
+      "f2": 0.0,
+      "s_score": 0.25,
+      "support_pos": 0,
+      "support_total": 3
+    },
+    "insult": {
+      "f1": 0.0,
+      "f2": 0.0,
+      "s_score": 0.25,
+      "support_pos": 0,
+      "support_total": 3
+    }
+  }
+}

@@ -1,0 +1,42 @@
+{
+  "model": "gemini-1.5-flash",
+  "split": "test",
+  "n_total": 20,
+  "n_successful": 0,
+  "n_failed": 20,
+  "use_cot": false,
+  "use_few_shot": true,
+  "platform": null,
+  "macro_f1": {
+    "mean": 0.0,
+    "lower": 0.0,
+    "upper": 0.0
+  },
+  "macro_s_score": {
+    "mean": 0.25,
+    "lower": 0.25,
+    "upper": 0.25
+  },
+  "per_label": {
+    "hate_speech": {
+      "f1": 0.0,
+      "s_score": 0.25,
+      "n_positives": 3
+    },
+    "toxic": {
+      "f1": 0.0,
+      "s_score": 0.25,
+      "n_positives": 1
+    },
+    "threat": {
+      "f1": NaN,
+      "s_score": NaN,
+      "n_positives": 0
+    },
+    "insult": {
+      "f1": 0.0,
+      "s_score": 0.25,
+      "n_positives": 1
+    }
+  }
+}

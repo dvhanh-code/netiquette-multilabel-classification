@@ -1,0 +1,21 @@
+{
+  "model_name": "deepset/gbert-large",
+  "mode": "gold_silver",
+  "max_length": 128,
+  "batch_size": 4,
+  "epochs": 5,
+  "patience": 2,
+  "learning_rate": 1e-05,
+  "warmup_ratio": 0.03,
+  "loss": "MaskedFocalLoss",
+  "gamma": 2.0,
+  "alpha": [
+    0.9689891029208481,
+    0.8974783356369601,
+    0.9968947904300398,
+    0.932340018301585
+  ],
+  "optimizer": "AdamW",
+  "weight_decay": 0.01,
+  "seed": 42
+}

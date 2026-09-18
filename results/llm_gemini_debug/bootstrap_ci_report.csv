@@ -1,0 +1,7 @@
+label,f1_mean,f1_lower,f1_upper,s_score_mean,s_score_lower,s_score_upper,n_positives,n_total
+hate_speech,0.0,0.0,0.0,0.25,0.25,0.25,3.0,20.0
+toxic,0.0,0.0,0.0,0.25,0.25,0.25,1.0,3.0
+threat,,,,,,,0.0,6.0
+insult,0.0,0.0,0.0,0.25,0.25,0.25,1.0,9.0
+macro_f1,0.0,0.0,0.0,,,,,
+macro_s_score,,,,0.25,0.25,0.25,,

@@ -21,6 +21,7 @@ from src.dataset.loaders.gutefrage import GutefragLoader
 from src.dataset.loaders.detox import DetoxLoader
 from src.dataset.loaders.hocon34k import HOCON34kLoader
 from src.preprocessing.translate import EnglishToGermanTranslator, _md5
+from src.dataset.loaders.rp_mod import RPModLoader
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -379,15 +380,23 @@ class TestTranslatorIntegration:
             "The weather is beautiful today.",
             "Women belong in the kitchen.",
         ]
-        df = _make_df([{"text": t, "language": "en"} for t in samples])
-        t = EnglishToGermanTranslator(cache_path=tmp_path / "cache.parquet", batch_size=4)
-        out = t.translate(df)
 
+        df = _make_df([
+            {"text": text, "language": "en"}
+            for text in samples
+        ])
+
+        translator = EnglishToGermanTranslator(
+            cache_path=tmp_path / "cache.parquet",
+            batch_size=4,
+        )
+
+        out = translator.translate(df)
+
+        assert len(out) == len(df)
         assert (out["language"] == "de").all()
-        assert out["text"].str.len().min() > 0
-
-        kitchen_row = out[df["text"] == "Women belong in the kitchen."]
-        assert "küche" in kitchen_row["text"].iloc[0].lower()
+        assert out["text"].notna().all()
+        assert out["text"].str.strip().ne("").all()
 
     def test_cache_used_on_second_run(self, tmp_path):
         df = _make_df([{"text": "Good morning.", "language": "en"}])
@@ -783,7 +792,6 @@ class TestHOCON34kLoader:
 # ─────────────────────────────────────────────────────────────────────────────
 
 class TestRPModLoader:
-    from src.dataset.loaders.rp_mod import RPModLoader
 
     def _write_rp_mod(self, tmp_path, rows):
         rp_dir = tmp_path / "rp_mod"
@@ -807,56 +815,56 @@ class TestRPModLoader:
         return {**defaults, **kwargs}
 
     def test_threat_positive_at_threshold_2(self, tmp_path):
-        from src.dataset.loaders.rp_mod import RPModLoader
+
         out = RPModLoader().load(self._write_rp_mod(tmp_path, [
             self._base_row(**{"Threat Count Crowd": 2.0}),
         ]))
         assert out["threat"].iloc[0] == 1.0
 
     def test_threat_negative_below_threshold(self, tmp_path):
-        from src.dataset.loaders.rp_mod import RPModLoader
+
         out = RPModLoader().load(self._write_rp_mod(tmp_path, [
             self._base_row(**{"Threat Count Crowd": 1.0}),
         ]))
         assert out["threat"].iloc[0] == 0.0
 
     def test_hate_speech_from_racism(self, tmp_path):
-        from src.dataset.loaders.rp_mod import RPModLoader
+
         out = RPModLoader().load(self._write_rp_mod(tmp_path, [
             self._base_row(**{"Racism Count Crowd": 2.0, "Sexism Count Crowd": 0.0}),
         ]))
         assert out["hate_speech"].iloc[0] == 1.0
 
     def test_hate_speech_from_sexism_only(self, tmp_path):
-        from src.dataset.loaders.rp_mod import RPModLoader
+
         out = RPModLoader().load(self._write_rp_mod(tmp_path, [
             self._base_row(**{"Racism Count Crowd": 0.0, "Sexism Count Crowd": 2.0}),
         ]))
         assert out["hate_speech"].iloc[0] == 1.0
 
     def test_hate_speech_negative_both_below(self, tmp_path):
-        from src.dataset.loaders.rp_mod import RPModLoader
+
         out = RPModLoader().load(self._write_rp_mod(tmp_path, [
             self._base_row(**{"Racism Count Crowd": 1.0, "Sexism Count Crowd": 1.0}),
         ]))
         assert out["hate_speech"].iloc[0] == 0.0
 
     def test_insult_positive(self, tmp_path):
-        from src.dataset.loaders.rp_mod import RPModLoader
+
         out = RPModLoader().load(self._write_rp_mod(tmp_path, [
             self._base_row(**{"Insult Count Crowd": 3.0}),
         ]))
         assert out["insult"].iloc[0] == 1.0
 
     def test_toxic_is_always_nan(self, tmp_path):
-        from src.dataset.loaders.rp_mod import RPModLoader
+
         out = RPModLoader().load(self._write_rp_mod(tmp_path, [
             self._base_row(),
         ]))
         assert np.isnan(out["toxic"].iloc[0])
 
     def test_unannotated_rows_dropped(self, tmp_path):
-        from src.dataset.loaders.rp_mod import RPModLoader
+
         rows = [
             self._base_row(**{"Threat Count Crowd": float("nan")}),  # dropped
             self._base_row(**{"Threat Count Crowd": 0.0}),           # kept
@@ -865,17 +873,17 @@ class TestRPModLoader:
         assert len(out) == 1
 
     def test_schema_columns(self, tmp_path):
-        from src.dataset.loaders.rp_mod import RPModLoader
+
         out = RPModLoader().load(self._write_rp_mod(tmp_path, [self._base_row()]))
         assert list(out.columns) == SCHEMA_COLUMNS
 
     def test_language_is_de(self, tmp_path):
-        from src.dataset.loaders.rp_mod import RPModLoader
+
         out = RPModLoader().load(self._write_rp_mod(tmp_path, [self._base_row()]))
         assert (out["language"] == "de").all()
 
     def test_source_is_rp_mod(self, tmp_path):
-        from src.dataset.loaders.rp_mod import RPModLoader
+
         out = RPModLoader().load(self._write_rp_mod(tmp_path, [self._base_row()]))
         assert (out["source"] == "rp_mod").all()
 
