@@ -480,6 +480,15 @@ def main():
     val_metrics_tuned.to_csv(output_dir / "val_metrics.csv", index=False)
     test_metrics_tuned.to_csv(output_dir / "test_metrics.csv", index=False)
 
+    np.savez(
+        output_dir / "val_logits.npz",
+        logits=val_logits, labels=val_labels, label_mask=val_mask,
+    )
+    np.savez(
+        output_dir / "test_logits.npz",
+        logits=test_logits, labels=test_labels, label_mask=test_mask,
+    )
+
     summary = {
         "model_name": args.model_name,
         "mode": args.mode,
@@ -504,6 +513,8 @@ def main():
     print(f"  {output_dir / 'thresholds.json'}")
     print(f"  {output_dir / 'val_metrics.csv'}")
     print(f"  {output_dir / 'test_metrics.csv'}")
+    print(f"  {output_dir / 'val_logits.npz'}")
+    print(f"  {output_dir / 'test_logits.npz'}")
     print(f"  {output_dir / 'summary.json'}")
     print(f"  {output_dir / 'best_model'}")
 

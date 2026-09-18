@@ -1,0 +1,35 @@
+{
+  "model_name": "deepset/gbert-large",
+  "mode": "gold_silver",
+  "epoch": 5,
+  "best_epoch": 4,
+  "best_val_s": 0.6477374374362772,
+  "epochs_done": [
+    {
+      "epoch": 1,
+      "train_loss": 0.008494991640609075,
+      "val_macro_s": 0.6299498125566143
+    },
+    {
+      "epoch": 2,
+      "train_loss": 0.00646768828571745,
+      "val_macro_s": 0.6336761662183296
+    },
+    {
+      "epoch": 3,
+      "train_loss": 0.004688891065788017,
+      "val_macro_s": 0.6384183864928143
+    },
+    {
+      "epoch": 4,
+      "train_loss": 0.003914440773658999,
+      "val_macro_s": 0.6477374374362772
+    },
+    {
+      "epoch": 5,
+      "train_loss": 0.0024515488794881104,
+      "val_macro_s": 0.6336197598445222
+    }
+  ],
+  "status": "training"
+}

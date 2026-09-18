@@ -16,8 +16,9 @@ class RPModLoader(BaseCorpusLoader):
             DOI: 10.5281/zenodo.5291339
 
     Uses RP-Mod-Crowd.csv (85,000 rows total).
-    Only the 28,833 crowd-annotated rows are used
+    Uses the 28,833 rows with category-specific crowd annotations
     (rows where Threat Count Crowd is not NaN).
+    These correspond to comments rejected by at least one crowdworker.
 
     5 crowd annotators per comment.
     Threshold: >= 2 annotators = positive label.
@@ -40,7 +41,7 @@ class RPModLoader(BaseCorpusLoader):
 
         df = pd.read_csv(path)
 
-        # Only crowd-annotated rows
+        # Keep rows with category-specific crowd annotations
         df = df[df["Threat Count Crowd"].notna()].copy()
 
         # Clean text
